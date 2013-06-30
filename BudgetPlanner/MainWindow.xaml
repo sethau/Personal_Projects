@@ -1,0 +1,62 @@
+﻿<!-- Budget Planner      -->
+<!-- author: Seth Denney -->
+<!-- date: 6/2013        -->
+<Window x:Class="BudgetPlanner.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="747" Closed="saveState">
+    <Grid>
+        <Label Content="Budget Planner" Height="28" HorizontalAlignment="Left" Margin="188,0,0,0" Name="titleLabel" VerticalAlignment="Top" Width="102" FontWeight="Bold" />
+        <Label Content="Income1 (Yr)" Height="22" HorizontalAlignment="Left" Margin="95,20,0,0" Name="income1Label" VerticalAlignment="Top" FontSize="8" FontWeight="Bold" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="73,38,0,0" Name="income1Slider" VerticalAlignment="Top" Width="100" ValueChanged="income1Slider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="12,39,0,0" Name="income1Min" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="income1Min_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="174,39,0,0" Name="income1Max" VerticalAlignment="Top" Width="58" FontSize="8" Text="0" TextChanged="income1Max_TextChanged" />
+        <Label Content="Income2 (Yr)" FontSize="8" Height="22" HorizontalAlignment="Left" Margin="333,20,0,0" Name="income2Label" VerticalAlignment="Top" FontWeight="Bold" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="306,35,0,0" Name="income2Slider" VerticalAlignment="Top" Width="100" ValueChanged="income2Slider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="245,39,0,0" Name="income2Min" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="income2Min_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="407,39,0,0" Name="income2Max" VerticalAlignment="Top" Width="58" FontSize="8" Text="0" TextChanged="income2Max_TextChanged" />
+        <Label Content="Housing (Mo)" FontSize="8" Height="22" HorizontalAlignment="Left" Margin="96,58,0,0" Name="housingLabel" VerticalAlignment="Top" FontWeight="Bold" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="73,80,0,0" Name="housingSlider" VerticalAlignment="Top" Width="100" ValueChanged="housingSlider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="12,81,0,0" Name="housingMin" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="housingMin_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="174,81,0,0" Name="housingMax" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="housingMax_TextChanged" />
+        <Label Content="Transportation (Mo)" FontSize="8" Height="22" HorizontalAlignment="Left" Margin="319,58,0,0" Name="transportationLabel" VerticalAlignment="Top" FontWeight="Bold" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="306,77,0,0" Name="transportationSlider" VerticalAlignment="Top" Width="100" ValueChanged="transportationSlider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="245,81,0,0" Name="transportationMin" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="transportationMin_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="407,80,260,0" Name="transportationMax" VerticalAlignment="Top" Width="58" FontSize="8" Text="0" TextChanged="transportationMax_TextChanged" />
+        <Label Content="Food (Mo)" FontSize="8" Height="22" HorizontalAlignment="Left" Margin="99,100,0,0" Name="foodLabel" VerticalAlignment="Top" FontWeight="Bold" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="73,122,0,0" Name="foodSlider" VerticalAlignment="Top" Width="100" ValueChanged="foodSlider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="12,123,0,0" Name="foodMin" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="foodMin_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="174,123,0,0" Name="foodMax" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="foodMax_TextChanged" />
+        <Label Content="Insurance (Mo)" FontSize="8" FontWeight="Bold" Height="22" HorizontalAlignment="Left" Margin="324,102,0,0" Name="insuranceLabel" VerticalAlignment="Top" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="306,123,0,0" Name="insuranceSlider" VerticalAlignment="Top" Width="100" ValueChanged="insuranceSlider_ValueChanged" Maximum="1" />
+        <TextBox HorizontalAlignment="Left" Margin="245,124,0,168" Name="insuranceMin" Width="58" Text="0" FontSize="8" TextChanged="insuranceMin_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="407,124,0,0" Name="insuranceMax" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="insuranceMax_TextChanged" />
+        <Label Content="Savings (%)" FontSize="8" FontWeight="Bold" Height="22" HorizontalAlignment="Left" Margin="103,0,0,147" Name="savingsLabel" VerticalAlignment="Bottom" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="73,161,0,0" Maximum="1" Name="savingsSlider" VerticalAlignment="Top" Width="100" ValueChanged="savingsSlider_ValueChanged" />
+        <TextBox FontSize="8" Height="19" HorizontalAlignment="Left" Margin="12,165,0,0" Name="savingsMin" Text="0" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+        <TextBox FontSize="8" Height="19" HorizontalAlignment="Left" Margin="174,165,0,0" Name="savingsMax" Text="100" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+        <Label Content="Other Expenses (Mo)" FontSize="8" FontWeight="Bold" Height="22" HorizontalAlignment="Left" Margin="319,142,0,0" Name="otherLabel" VerticalAlignment="Top" />
+        <Slider Height="23" HorizontalAlignment="Left" Margin="306,161,0,0" Name="otherSlider" VerticalAlignment="Top" Width="100" ValueChanged="otherSlider_ValueChanged" Maximum="1" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="245,165,0,0" Name="otherMin" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="otherMin_TextChanged" />
+        <TextBox Height="19" HorizontalAlignment="Left" Margin="407,165,0,0" Name="otherMax" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="otherMax_TextChanged" />
+        <GroupBox Header="Income Tax (%)" Height="80" HorizontalAlignment="Left" Margin="50,205,0,0" Name="incomeTaxGroup" VerticalAlignment="Top" Width="112" FontWeight="Bold">
+            <Grid>
+                <TextBox Height="23" HorizontalAlignment="Left" Margin="21,17,0,0" Name="incomeTax" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Remaining" Height="79" HorizontalAlignment="Left" Margin="217,206,0,0" Name="remainingGroup" VerticalAlignment="Top" Width="108" FontWeight="Bold">
+            <Grid>
+                <TextBox Height="23" HorizontalAlignment="Left" Margin="20,16,0,0" Name="remaining" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+            </Grid>
+        </GroupBox>
+        <Button Content="Save Report" Height="23" HorizontalAlignment="Left" Margin="374,239,0,0" Name="saveReportButton" VerticalAlignment="Top" Width="89" FontWeight="Bold" Click="saveReportButton_Click" />
+        <Label Content="Report" Height="28" HorizontalAlignment="Left" Margin="586,0,0,0" Name="reportLabel" VerticalAlignment="Top" Width="55" FontWeight="Bold" />
+        <TextBox Height="242" HorizontalAlignment="Left" Margin="505,53,0,0" Name="reportTextBox" VerticalAlignment="Top" Width="200" IsReadOnly="True" />
+        <GroupBox Height="37" HorizontalAlignment="Left" Margin="529,21,0,0" Name="reportTimeGroup" VerticalAlignment="Top" Width="161" Visibility="Visible" BorderThickness="0">
+            <Grid Height="26">
+                <RadioButton Content="Monthly" Height="16" HorizontalAlignment="Left" Margin="7,4,0,0" Name="monthlyRB" VerticalAlignment="Top" Checked="monthlyRB_Checked" />
+                <RadioButton Content="Yearly" Height="16" HorizontalAlignment="Left" Margin="91,4,0,0" Name="yearlyRB" VerticalAlignment="Top" Checked="yearlyRB_Checked" IsChecked="True" />
+            </Grid>
+        </GroupBox>
+    </Grid>
+</Window>

@@ -1,0 +1,15 @@
+Yearly Budget				Monthly Budget
+
+Income 1: $60224			Income 1: $5018
+Income 2: $55000			Income 2: $4583
+Total Income: $115224		Total Income: $9602
+Total Taxes: $39890			Total Taxes: $3324
+Savings 15%: $11427			Savings 15%: $952
+
+Housing: $24144				Housing: $2012
+Transportation: $3036		Transportation: $253
+Food: $3000					Food: $250
+Insurance: $3360			Insurance: $280
+Other Expenses: $12000		Other Expenses: $1000
+
+Remaining Balance: $18367	Remaining Balance: $18367
