@@ -94,6 +94,7 @@ namespace BudgetPlanner
             tempTaxes += .09 * totalIncome;
             taxes = (int) tempTaxes;
             availableFunds = totalIncome - taxes;
+            savingsVal = (int)(savingsSlider.Value * availableFunds);
 
             refreshReports();
         }
@@ -178,7 +179,7 @@ namespace BudgetPlanner
                         + "\r\nFood: $" + foodVal * 12 + "\t\t\t\t\tFood: $" + foodVal
                         + "\r\nInsurance: $" + insuranceVal * 12 + "\t\t\tInsurance: $" + insuranceVal
                         + "\r\nOther Expenses: $" + otherVal * 12 + "\t\tOther Expenses: $" + otherVal
-                        + "\r\n\nRemaining Balance: $" + remaining.Text + "\tRemaining Balance: $" + remaining.Text; ;
+                        + "\r\n\nRemaining Balance: $" + remaining.Text + "\t\tRemaining Balance: $" + remaining.Text; ;
             }
         }
 
@@ -445,7 +446,7 @@ namespace BudgetPlanner
         {
             if (loaded)
             {
-                savingsVal = (int)(savingsSlider.Value * availableFunds);
+                savingsVal = (int) (savingsSlider.Value * availableFunds);
                 refreshReports();
             }
         }
