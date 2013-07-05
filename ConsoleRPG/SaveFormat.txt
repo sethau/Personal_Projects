@@ -1,0 +1,17 @@
+name
+gold
+HP
+mana
+level
+XP
+nextLevel
+strength
+armor
+speed
+intelligence
+current weapon
+item 1 name
+item 2 name
+...
+
+
