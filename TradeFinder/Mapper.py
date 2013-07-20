@@ -51,7 +51,7 @@ class TradeMapper:
 				print 'save'
 				self.tradeRanker.addTrade(Trade(path))
 			else:
-                #Once values are being taken into account, sort last.canGiveTo (and canTakeFrom?) by value greatest to least)
+				#Once values are being taken into account, sort last.canGiveTo (and canTakeFrom?) by value greatest to least)
 				for i in range(len(last.canGiveTo)):
 					targetName = last.canGiveTo[i][0]
 					print last.id, targetName
@@ -132,6 +132,9 @@ class Trade:
 			for item in trader.taken:
 				self.state += '  <- ' + str(item) + '\n'
 
+	def __eq__(self, trade):
+		return str(self) == str(trade)
+
 	def __str__(self):
 		return self.state
 
@@ -142,7 +145,9 @@ class TradeRanker:
 	def __init__(self, tradeCandidatesIn = None):
 		#[Trade, ...]
 		self.tradeCandidates = tradeCandidatesIn
-        #[Trade, ...]
+		#[[Trade, ...], ...]
+		self.tradeGroupCandidates = []
+		#[Trade, ...]
 		self.optimal = []
 
 		if self.tradeCandidates is None:
@@ -151,7 +156,7 @@ class TradeRanker:
 		for trade in self.tradeCandidates:
 			trade.parsePath()
 		if len(self.tradeCandidates) > 0:
-			self.findOptimal(self.tradeCandidates)
+			self.findOptimal()
 
 	def addTrade(self, trade):
 		self.tradeCandidates.append(trade)
@@ -159,21 +164,38 @@ class TradeRanker:
 	def findOptimal(self):
 		for trade in self.tradeCandidates:
 			trade.parsePath()
-		self.findOptimalInternal(self.tradeCandidates)
+		uniqueCandidates = []
+		for trade in self.tradeCandidates:
+			if trade not in uniqueCandidates:
+				uniqueCandidates.append(trade)
+		self.tradeCandidates = uniqueCandidates
+		for trade in self.tradeCandidates:
+			self.findOptimalInternal(self.tradeCandidates, trade, [trade])
+		if len(self.tradeGroupCandidates) > 0:
+			self.optimal = self.tradeGroupCandidates[0]
+			for tradeGroup in self.tradeGroupCandidates:
+				if self.isBetterGroup(tradeGroup, self.optimal):
+					self.optimal = tradeGroup
 
-	def findOptimalInternal(self, possibleAdditionalTrades):
-		optimal = Trade()
+	def findOptimalInternal(self, possibleAdditionalTrades, currentTrade, currentGroup):
 		next = []
-		for trade in possibleAdditionalTrades:
-			if trade.isBetter(optimal):
-				optimal = trade
-		self.optimal.append(optimal)
-		for trade in possibleAdditionalTrades:
-			if len(trade.itemSet.intersection(optimal.itemSet)) == 0:
-				next.append(trade)
+		for nextTrade in possibleAdditionalTrades:
+			if len(nextTrade.itemSet.intersection(currentTrade.itemSet)) == 0:
+				next.append(nextTrade)
 		if len(next) > 0:
-			self.findOptimalInternal(next)
+			for trade in next:
+				self.findOptimalInternal(next, trade, currentGroup + [trade])
+		else:
+			self.tradeGroupCandidates.append(list(currentGroup))
 
+	def isBetterGroup(self, group1, group2):
+		score1 = 0
+		for trade in group1:
+			score1 += len(trade.path)
+		score2 = 0
+		for trade in group2:
+			score2 += len(trade.path)
+		return score1 > score2
 
 	def __str__(self):
 		out = '\n*************************\nTrades\n*************************'
