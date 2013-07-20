@@ -67,49 +67,74 @@ namespace BudgetPlanner
         //TL;DR I asked a real accountant! :D
         private void calculateTaxes()
         {
-            int tempIncome = totalIncome;
+            int tempTaxes = 0;
+
+            if (income1Val > 0)
+            {
+                tempTaxes += (int) calculateIndividualTax(income1Val);
+            }
+            if (income2Val > 0)
+            {
+                tempTaxes += (int) calculateIndividualTax(income2Val);
+            }
+            
+            taxes = (int) tempTaxes;
+            availableFunds = totalIncome - taxes;
+            savingsVal = (int) (savingsSlider.Value * availableFunds);
+
+            refreshReports();
+        }
+
+        private double calculateIndividualTax(int income)
+        {
+            int[] THRESHOLD = {8925, 27325, 51600, 95400, 9999999};
+            double[] TAX = { .1, .15, .25, .28, .33 };
+            double FICA = .0765, STATE_AVG = .08, RES_AVG = .036;
+            int tempIncome = income, i = 0;
             double tempTaxes = 0;
 
-            if (tempIncome >= 18000)
+            //Federal Income Tax
+            while (tempIncome > 0 || i >= THRESHOLD.Length)
             {
-                tempTaxes += .1 * 18000;
-                tempIncome -= 18000;
-                if (tempIncome >= 54000)
+                if (tempIncome >= THRESHOLD[i])
                 {
-                    tempTaxes += .15 * 54000;
-                    tempIncome -= 54000;
-                    tempTaxes += .25 * tempIncome;
+                    tempTaxes += TAX[i] * THRESHOLD[i];
+                    tempIncome -= THRESHOLD[i];
                 }
                 else
                 {
-                    tempTaxes += .15 * tempIncome;
+                    tempTaxes += TAX[i] * tempIncome;
+                    tempIncome = 0;
                 }
+                i++;
             }
-            else
+
+            //FICA
+            tempTaxes += FICA * income;
+
+            //State
+            tempTaxes += STATE_AVG * income;
+
+            //City Limits Residency Tax
+            if (residentRB.IsChecked == true)
             {
-                tempTaxes += .1 * tempIncome;
+                tempTaxes += RES_AVG * income;
             }
 
-            tempTaxes += .0765 * totalIncome;
-            tempTaxes += .09 * totalIncome;
-            taxes = (int) tempTaxes;
-            availableFunds = totalIncome - taxes;
-            savingsVal = (int)(savingsSlider.Value * availableFunds);
-
-            refreshReports();
+            return tempTaxes;
         }
 
         private int calculateRemainingFunds()
         {
             if (monthlyRB.IsChecked == true)
             {
-                return (availableFunds / 12) - housingVal - transportationVal - foodVal
-                    - (savingsVal / 12) - insuranceVal - otherVal;
+                return (availableFunds / 12) - housingVal - transportationVal
+                    - foodVal - (savingsVal / 12) - insuranceVal - otherVal;
             }
             else
             {
-                return availableFunds - (housingVal * 12) - (transportationVal * 12) - (foodVal * 12)
-                    - savingsVal - (insuranceVal * 12) - (otherVal * 12);
+                return availableFunds - (housingVal * 12) - (transportationVal * 12)
+                    - (foodVal * 12) - savingsVal - (insuranceVal * 12) - (otherVal * 12);
             }
         }
 
@@ -504,6 +529,16 @@ namespace BudgetPlanner
                 reportFile.WriteLine(reportString(true, true));
                 reportFile.Close();
             }
+        }
+
+        private void residentRB_Checked(object sender, RoutedEventArgs e)
+        {
+            calculateIncome();
+        }
+
+        private void nonResidentRB_Checked(object sender, RoutedEventArgs e)
+        {
+            calculateIncome();
         }
     }
 }

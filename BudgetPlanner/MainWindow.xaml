@@ -39,17 +39,19 @@
         <Slider Height="23" HorizontalAlignment="Left" Margin="306,161,0,0" Name="otherSlider" VerticalAlignment="Top" Width="100" ValueChanged="otherSlider_ValueChanged" Maximum="1" />
         <TextBox Height="19" HorizontalAlignment="Left" Margin="245,165,0,0" Name="otherMin" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="otherMin_TextChanged" />
         <TextBox Height="19" HorizontalAlignment="Left" Margin="407,165,0,0" Name="otherMax" VerticalAlignment="Top" Width="58" Text="0" FontSize="8" TextChanged="otherMax_TextChanged" />
-        <GroupBox Header="Income Tax (%)" Height="80" HorizontalAlignment="Left" Margin="50,205,0,0" Name="incomeTaxGroup" VerticalAlignment="Top" Width="112" FontWeight="Bold">
-            <Grid>
-                <TextBox Height="23" HorizontalAlignment="Left" Margin="21,17,0,0" Name="incomeTax" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+        <GroupBox Header="Income Tax (%)" Height="80" HorizontalAlignment="Left" Margin="12,205,0,0" Name="incomeTaxGroup" VerticalAlignment="Top" Width="220" FontWeight="Bold">
+            <Grid Width="205">
+                <TextBox Height="23" HorizontalAlignment="Right" Margin="0,17,26,0" Name="incomeTax" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
+                <RadioButton Content="Resident" Height="16" HorizontalAlignment="Left" Margin="6,6,0,0" Name="residentRB" VerticalAlignment="Top" Checked="residentRB_Checked" />
+                <RadioButton Content="Non-Resident" Height="16" HorizontalAlignment="Left" Margin="6,35,0,0" Name="nonResidentRB" VerticalAlignment="Top" IsChecked="True" Checked="nonResidentRB_Checked" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Remaining" Height="79" HorizontalAlignment="Left" Margin="217,206,0,0" Name="remainingGroup" VerticalAlignment="Top" Width="108" FontWeight="Bold">
+        <GroupBox Header="Remaining" Height="79" HorizontalAlignment="Left" Margin="244,206,0,0" Name="remainingGroup" VerticalAlignment="Top" Width="108" FontWeight="Bold">
             <Grid>
                 <TextBox Height="23" HorizontalAlignment="Left" Margin="20,16,0,0" Name="remaining" VerticalAlignment="Top" Width="58" IsReadOnly="True" />
             </Grid>
         </GroupBox>
-        <Button Content="Save Report" Height="23" HorizontalAlignment="Left" Margin="374,239,0,0" Name="saveReportButton" VerticalAlignment="Top" Width="89" FontWeight="Bold" Click="saveReportButton_Click" />
+        <Button Content="Save Report" Height="23" HorizontalAlignment="Left" Margin="382,239,0,0" Name="saveReportButton" VerticalAlignment="Top" Width="89" FontWeight="Bold" Click="saveReportButton_Click" />
         <Label Content="Report" Height="28" HorizontalAlignment="Left" Margin="586,0,0,0" Name="reportLabel" VerticalAlignment="Top" Width="55" FontWeight="Bold" />
         <TextBox Height="242" HorizontalAlignment="Left" Margin="505,53,0,0" Name="reportTextBox" VerticalAlignment="Top" Width="200" IsReadOnly="True" />
         <GroupBox Height="37" HorizontalAlignment="Left" Margin="529,21,0,0" Name="reportTimeGroup" VerticalAlignment="Top" Width="161" Visibility="Visible" BorderThickness="0">
