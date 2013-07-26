@@ -1,7 +1,10 @@
 #!\usr\bin\python
 
+"""
+This class is the driver class for mapping traders into trades.
+"""
 class TradeMapper:
-	def __init__(self, traders = None):
+	def __init__(self, traders):
 		#{string : Trader, ...}
 		self.traderDict = {}
 		#{string : TraderNode, ...}
@@ -24,68 +27,206 @@ class TradeMapper:
 		self.buildTradeGraph()
 
 	def buildTradeGraph(self):
+		#iterate over all items (wanted + available) to check for matches
 		for wanted in self.itemsWanted:
 			for available in self.itemsAvailable:
 				if wanted.matches(available):
+					#create new TraderNode in tradeGraph if necessary
 					if available.owner not in self.tradeGraph:
 						self.tradeGraph[available.owner] = TraderNode(available.owner)
 					if wanted.owner not in self.tradeGraph:
 						self.tradeGraph[wanted.owner] = TraderNode(wanted.owner)
-					self.tradeGraph[available.owner].canGiveTo.append((wanted.owner, available))#be careful using available, because the given price may not be the only possible price if there are multiple possible available matches for wanted
-					self.tradeGraph[wanted.owner].canTakeFrom.append((available.owner, available))
-		print '*************************\nTrade Graph\n*************************\n', self.tradeGraph
+					#tradeGraph value exists now
+					#create new FlowEdge in TraderNode if necessary
+					if not self.tradeGraph[available.owner].canGiveToTrader(wanted.owner):
+						edge = FlowEdge(self.tradeGraph[available.owner], self.tradeGraph[wanted.owner])
+						self.tradeGraph[available.owner].canGiveTo.append(edge)
+						self.tradeGraph[wanted.owner].canTakeFrom.append(edge)
+					#edge exists now
+					edge.addItem(available)
 
 	def findTrades(self):
-		possibleTrades = []
-		print '*************************\nSearching Paths\n*************************'
 		for node in self.tradeGraph.values():
-			print 'start'
-			self.search(node, [(node, None)])
+			self.flowSearch(node, [], [0, 0])
 		self.tradeRanker.findOptimal()
 		print self.tradeRanker
 
-	def search(self, source, path):
+	#path = [(FlowEdge, [Item, ...]), ...]
+	def flowSearch(self, source, path, rangeIn):
 		if len(path) > 0:
-			last = path[-1][0]
-			if len(path) > 2 and last.id == source.id:
-				print 'save'
+			last = path[-1][0].toNode
+			if len(path) > 1 and last.id == source.id:
 				self.tradeRanker.addTrade(Trade(path))
-			else:
-				#Once values are being taken into account, sort last.canGiveTo (and canTakeFrom?) by value greatest to least)
-				for i in range(len(last.canGiveTo)):
-					targetName = last.canGiveTo[i][0]
-					print last.id, targetName
-					target = self.tradeGraph[targetName]
-					last.given.append(last.canGiveTo.pop(i))
-					temp = path + [(target, last.given[-1][1])]
-					self.search(source, temp)
-					print 'back to', last.id
-					last.canGiveTo.insert(i, last.given.pop())
+		else:
+			last = source
+		for i in range(len(last.canGiveTo)):
+			edge = last.canGiveTo[i]
+			if (rangeIn[0] == 0 and rangeIn[1] == 0):
+				rangeIn = [0, edge.residualFlow[1]]
+			options = edge.getItemsInRangeOptions(rangeIn)
+			for option in options:
+				edge.give(itemsIn = option)
+				newRange = edge.getValueRange(option, rangeIn)
+				self.flowSearch(source, path + [(edge, option)], newRange)
+				edge.unGiveItems(option)
 
+
+"""
+Represents a Trader in the flow network.
+canGiveTo and canTakeFrom represent the FlowEdges out of and into this node.
+"""
 class TraderNode:
 	def __init__(self, idIn = ''):
 		self.id = idIn
-		#[(string, Item), ...]
+		#[FlowEdge, ...]
 		self.canGiveTo = []
-		#[(string, Item), ...]
+		#[FlowEdge, ...]
 		self.canTakeFrom = []
-		#[(string, Item), ...]
+		#[(Item, ...]
 		self.given = []
-		#[(string, Item), ...]
+		#[Item, ...]
 		self.taken = []
 
+	def canGiveToTrader(self, traderId):
+		for edge in self.canGiveTo:
+			if edge.toNode.id == traderId:
+				return True
+		return False
+
 	def __str__(self):
-		out = self.id + ':'
-		for name, given in self.canGiveTo:
-			out += '\n  -> ' + name + ': ' + str(given)
-		for name, taken in self.canTakeFrom:
-			out += '\n  <- ' + name + ': ' + str(taken)
+		out = self.id + ':\n'
+		for edge in self.canGiveTo + self.canTakeFrom:
+			out += str(edge)
 		out += '\n'
 		return out
 
 	def __repr__(self):
 		return str(self)
 
+
+"""
+Represents a directed edge between two TraderNode objects.
+Holds Item information regarding items that can be traded along the edge.
+"""
+class FlowEdge:
+	def __init__(self, fromNodeIn, toNodeIn):
+		self.fromNode = fromNodeIn
+		self.toNode = toNodeIn
+		#[Item, ...]
+		self.items = []
+		self.residualFlow = [0, 0]
+
+	#adds item and recalculates residual flow range
+	def addItem(self, item):
+		self.items.append(item)
+		self.residualFlow[1] += item.valueRange[1]
+		if self.residualFlow[0] == 0:
+			self.residualFlow[0] = item.valueRange[0]
+		if self.residualFlow[0] > item.valueRange[0]:
+			self.residualFlow[0] = item.valueRange[0]
+
+	#facade method for getItemsInRangeOptionsInternal()
+	def getItemsInRangeOptions(self, rangeIn):
+		out = []
+		self.getItemsInRangeOptionsInternal(rangeIn, [], out, [])
+		return out
+
+	#finds and returns all possible item combinations that can satisfy the given range requirements
+	#currentOption is a lst of Item objects that is added to and popped from as various DFS Item combinations are explored
+	#optionsOut is a list [[Item, ...], ...] of snapshots of currentOption at different times with different valid Item combinations
+	#foundOptions is a list [[Item.name, ...], ...] that parallels optionsOut, but is a more efficient check for equivalent options
+	def getItemsInRangeOptionsInternal(self, rangeIn, currentOption, optionsOut, foundOptions):
+		if len(self.items) > 0:
+			for i in range(len(self.items)):
+				item = self.items[i]
+				#if the minimum value for the item will not pass the maximum input value, it will not breach the input range
+				if item.valueRange[0] <= rangeIn[1]:
+					currentOption.append(self.items.pop(i))
+					self.getItemsInRangeOptionsInternal([max(0, rangeIn[0] - item.valueRange[0]), rangeIn[1] - item.valueRange[0]], currentOption, optionsOut, foundOptions)
+					self.items.insert(i, currentOption.pop())
+				elif item.valueRange >= rangeIn[0] and len(currentOption) > 0:
+					#check for equivalent options before appending to optionsOut
+					names = []
+					for item in currentOption:
+						names.append(item.name)
+					names = sorted(names)
+					if not names in foundOptions:
+						optionsOut.append(list(currentOption))
+						foundOptions.append(list(names))
+		elif len(currentOption) > 0:
+			#check for equivalent options before appending to optionsOut
+			names = []
+			for item in currentOption:
+				names.append(item.name)
+			names = sorted(names)
+			if not names in foundOptions:
+				optionsOut.append(list(currentOption))
+				foundOptions.append(list(names))
+
+	#calculates the value range for a list of Item objects
+	#if rangeIn != None, then it calculates the value range of
+	#the Item list within the constraints of rangeIn
+	def getValueRange(self, itemsIn, rangeIn = None):
+		if rangeIn == None:
+			rangeIn = []
+		out = [0, 0]
+		for item in itemsIn:
+			out[0] += item.valueRange[0]
+			out[1] += item.valueRange[1]
+		if len(rangeIn) == 2:
+			return [max(rangeIn[0], out[0]), min(rangeIn[1], out[1])]
+		else:
+			return out
+
+	#simulates giving an available Item to the recipient TraderNode
+	def give(self, index = -1, itemsIn = None):
+		if not itemsIn == None:
+			popItems = []
+			for item in itemsIn:
+				popItems.append(self.items.pop(self.items.index(item)))
+				self.fromNode.given.append(popItems[-1])
+				self.residualFlow[1] -= popItems[-1].valueRange[1]
+				if self.residualFlow[0] == popItems[-1].valueRange[0]:
+					self.residualFlow[0] = 0
+					for item in self.items:
+						if self.residualFlow[0] == 0:
+							self.residualFlow[0] = item.valueRange[0]
+						elif self.residualFlow[0] > item.valueRange[0]:
+							self.residualFlow[0] = item.valueRange[0]
+			return popItems
+		elif index > -1:
+			popItem = self.items.pop(index)
+			self.fromNode.given.append(popItem)
+			self.residualFlow[1] -= popItem.valueRange[1]
+			if self.residualFlow[0] == popItem.valueRange[0]:
+				self.residualFlow[0] = 0
+				for item in self.items:
+					if self.residualFlow[0] == 0:
+						self.residualFlow[0] = item.valueRange[0]
+					elif self.residualFlow[0] > item.valueRange[0]:
+						self.residualFlow[0] = item.valueRange[0]
+			return popItem
+		return None
+
+	#undoes the give() operation
+	def unGiveItems(self, givenItems):
+		for item in givenItems:
+			self.addItem(item)
+
+	def __str__(self):
+		out = '  ' + self.fromNode.id + ' -> ' + self.toNode.id
+		for item in self.items:
+			out += '\n    ' + str(item)
+		out += '\n'
+		return out
+
+	def __repr__(self):
+		return str(self)
+
+
+"""
+Stores information about given and received items in one simulated trade.
+"""
 class Trade:
 	def __init__(self, pathIn = None):
 		#self.state will not always necessarily be a string representation, but for now, it works best
@@ -94,11 +235,15 @@ class Trade:
 		self.traders = {}
 		#{string, ...}
 		self.itemSet = set()
+        #if later deemed necessary, store list of traded items with updated owner id's
+        #self.items = []
 		self.path = pathIn
 
 		if self.path is None:
 			self.path = []
 
+    #judges merit on number of items traded
+    #may switch to highest average value or other metric
 	def isBetter(self, trade):
 		if len(self.path) > len(trade.path):
 			return True
@@ -109,20 +254,23 @@ class Trade:
 
 	def parsePath(self):
 		#TraderNode
-		last = None
-		for node, item in self.path:
-			if node.id not in self.traders:
-				self.traders[node.id] = node
-				node.given = []
-				node.taken = []
-			if last:
-				self.traders[last].given.append(item)
-			last = node.id
-			if item:
-				node.taken.append(item)
-				self.itemSet.add(item.name)
+		for edge, items in self.path:
+			giver = edge.fromNode
+			taker = edge.toNode
+			if giver.id not in self.traders:
+				self.traders[giver.id] = giver
+				giver.given = []
+				giver.taken = []
+			if taker.id not in self.traders:
+				self.traders[taker.id] = taker
+				taker.given = []
+				taker.taken = []
+			giver.given.extend(items)
+			taker.taken.extend(items)
+			self.itemSet.update([item.name for item in items])
 		self.saveState()
 
+    #may not always be a string
 	def saveState(self):
 		self.state = ''
 		for trader in self.traders.values():
@@ -131,6 +279,15 @@ class Trade:
 				self.state += '  -> ' + str(item) + '\n'
 			for item in trader.taken:
 				self.state += '  <- ' + str(item) + '\n'
+
+    #for comparison against other Trade objects
+    #judges merit on number of items traded
+    #may switch to highest average value or other metric
+	def score(self):
+		score = 0
+		for edge, items in self.path:
+			score += len(items)
+		return score
 
 	def __eq__(self, trade):
 		return str(self) == str(trade)
@@ -141,6 +298,10 @@ class Trade:
 	def __repr__(self):
 		return self.state
 
+
+"""
+Aggregates potential Trade instances, and finds optimal trade or combination of trades.
+"""
 class TradeRanker:
 	def __init__(self, tradeCandidatesIn = None):
 		#[Trade, ...]
@@ -158,9 +319,12 @@ class TradeRanker:
 		if len(self.tradeCandidates) > 0:
 			self.findOptimal()
 
+    #may add analysis here if needed
 	def addTrade(self, trade):
 		self.tradeCandidates.append(trade)
 
+    #facade method for findOptimlInternal()
+    #once compatible Trade groups are found, compare and store optimal group
 	def findOptimal(self):
 		for trade in self.tradeCandidates:
 			trade.parsePath()
@@ -177,6 +341,7 @@ class TradeRanker:
 				if self.isBetterGroup(tradeGroup, self.optimal):
 					self.optimal = tradeGroup
 
+    #looks for compatible trades
 	def findOptimalInternal(self, possibleAdditionalTrades, currentTrade, currentGroup):
 		next = []
 		for nextTrade in possibleAdditionalTrades:
@@ -191,17 +356,14 @@ class TradeRanker:
 	def isBetterGroup(self, group1, group2):
 		score1 = 0
 		for trade in group1:
-			score1 += len(trade.path)
+			score1 += trade.score()
 		score2 = 0
 		for trade in group2:
-			score2 += len(trade.path)
+			score2 += trade.score()
 		return score1 > score2
 
 	def __str__(self):
-		out = '\n*************************\nTrades\n*************************'
-		for i in range(len(self.tradeCandidates)):
-			out += '\nTrade ' + str(i)
-			out += '\n' + str(self.tradeCandidates[i])
+		out = ''
 		out += '\n\nOptimal Trade:\n'
 		out += str(self.optimal)
 		return out
