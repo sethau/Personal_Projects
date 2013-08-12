@@ -134,34 +134,23 @@ class FlowEdge:
 	#finds and returns all possible item combinations that can satisfy the given range requirements
 	#currentOption is a lst of Item objects that is added to and popped from as various DFS Item combinations are explored
 	#optionsOut is a list [[Item, ...], ...] of snapshots of currentOption at different times with different valid Item combinations
-	#foundOptions is a list [[Item.name, ...], ...] that parallels optionsOut, but is a more efficient check for equivalent options
-	def getItemsInRangeOptionsInternal(self, rangeIn, currentOption, optionsOut, foundOptions):
+	#foundOptionsNames is a list [[Item.name, ...], ...] that parallels optionsOut, but is a more efficient check for equivalent options
+	def getItemsInRangeOptionsInternal(self, rangeIn, currentOption, optionsOut, foundOptionsNames):
+		if rangeIn[0] == 0 and len(currentOption) > 0:
+			names = sorted([item.name for item in currentOption])
+			#check for equivalent options before saving option
+			if names not in foundOptionsNames:
+				optionsOut.append(list(currentOption))
+				foundOptionsNames.append(names)
 		if len(self.items) > 0:
 			for i in range(len(self.items)):
 				item = self.items[i]
 				#if the minimum value for the item will not pass the maximum input value, it will not breach the input range
 				if item.valueRange[0] <= rangeIn[1]:
 					currentOption.append(self.items.pop(i))
-					self.getItemsInRangeOptionsInternal([max(0, rangeIn[0] - item.valueRange[0]), rangeIn[1] - item.valueRange[0]], currentOption, optionsOut, foundOptions)
+					self.getItemsInRangeOptionsInternal([max(0, rangeIn[0] - item.valueRange[0]), rangeIn[1] - item.valueRange[0]],
+					currentOption, optionsOut, foundOptionsNames)
 					self.items.insert(i, currentOption.pop())
-				elif item.valueRange >= rangeIn[0] and len(currentOption) > 0:
-					#check for equivalent options before appending to optionsOut
-					names = []
-					for item in currentOption:
-						names.append(item.name)
-					names = sorted(names)
-					if not names in foundOptions:
-						optionsOut.append(list(currentOption))
-						foundOptions.append(list(names))
-		elif len(currentOption) > 0:
-			#check for equivalent options before appending to optionsOut
-			names = []
-			for item in currentOption:
-				names.append(item.name)
-			names = sorted(names)
-			if not names in foundOptions:
-				optionsOut.append(list(currentOption))
-				foundOptions.append(list(names))
 
 	#calculates the value range for a list of Item objects
 	#if rangeIn != None, then it calculates the value range of
