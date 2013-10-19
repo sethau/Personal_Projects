@@ -87,41 +87,53 @@ namespace BudgetPlanner
 
         private double calculateIndividualTax(int income)
         {
-            int[] THRESHOLD = {8925, 27325, 51600, 95400, 9999999};
-            double[] TAX = { .1, .15, .25, .28, .33 };
-            double FICA = .0765, STATE_AVG = .08, RES_AVG = .036;
-            int tempIncome = income, i = 0;
-            double tempTaxes = 0;
-
-            //Federal Income Tax
-            while (tempIncome > 0 || i >= THRESHOLD.Length)
+            if (customRB.IsChecked == false)
             {
-                if (tempIncome >= THRESHOLD[i])
+                int[] THRESHOLD = { 8925, 27325, 51600, 95400, 9999999 };
+                double[] TAX = { .1, .15, .25, .28, .33 };
+                double FICA = .0765, STATE_AVG = .08, RES_AVG = .036;
+                int tempIncome = income, i = 0;
+                double tempTaxes = 0;
+
+                //Federal Income Tax
+                while (tempIncome > 0 || i >= THRESHOLD.Length)
                 {
-                    tempTaxes += TAX[i] * THRESHOLD[i];
-                    tempIncome -= THRESHOLD[i];
+                    if (tempIncome >= THRESHOLD[i])
+                    {
+                        tempTaxes += TAX[i] * THRESHOLD[i];
+                        tempIncome -= THRESHOLD[i];
+                    }
+                    else
+                    {
+                        tempTaxes += TAX[i] * tempIncome;
+                        tempIncome = 0;
+                    }
+                    i++;
                 }
-                else
+
+                //FICA
+                tempTaxes += FICA * income;
+
+                //State
+                tempTaxes += STATE_AVG * income;
+
+                //City Limits Residency Tax
+                if (residentRB.IsChecked == true)
                 {
-                    tempTaxes += TAX[i] * tempIncome;
-                    tempIncome = 0;
+                    tempTaxes += RES_AVG * income;
                 }
-                i++;
+
+                return tempTaxes;
             }
-
-            //FICA
-            tempTaxes += FICA * income;
-
-            //State
-            tempTaxes += STATE_AVG * income;
-
-            //City Limits Residency Tax
-            if (residentRB.IsChecked == true)
+            else
             {
-                tempTaxes += RES_AVG * income;
+                double tax = 0;
+                if (double.TryParse(incomeTax.Text, out tax))
+                {
+                    tax *= 0.01 * income;
+                }
+                return tax;
             }
-
-            return tempTaxes;
         }
 
         private int calculateRemainingFunds()
@@ -142,7 +154,10 @@ namespace BudgetPlanner
         {
             if (totalIncome > 0)
             {
-                incomeTax.Text = (int)(100 * ((double)taxes / totalIncome)) + "%";
+                if (customRB.IsChecked == false)
+                {
+                    incomeTax.Text = (int)(100 * ((double)taxes / totalIncome)) + "%";
+                }
                 remaining.Text = calculateRemainingFunds().ToString();
                 if (monthlyRB.IsChecked == true)
                 {
@@ -167,6 +182,7 @@ namespace BudgetPlanner
                             + "\r\nIncome 2: $" + income2Val / 12
                             + "\r\nTotal Income: $" + totalIncome / 12
                             + "\r\nTotal Taxes: $" + taxes / 12
+                            + "\r\nAfter Taxes: $" + (totalIncome / 12 - taxes / 12)
                             + "\r\nSavings " + (int)(savingsSlider.Value * 100) + "%: $" + savingsVal / 12
                             + "\r\n\nHousing: $" + housingVal
                             + "\r\nTransportation: $" + transportationVal
@@ -181,6 +197,7 @@ namespace BudgetPlanner
                             + "\r\nIncome 2: $" + income2Val
                             + "\r\nTotal Income: $" + totalIncome
                             + "\r\nTotal Taxes: $" + taxes
+                            + "\r\nAfter Taxes: $" + (totalIncome - taxes)
                             + "\r\nSavings " + (int)(savingsSlider.Value * 100) + "%: $" + savingsVal
                             + "\r\n\nHousing: $" + housingVal * 12
                             + "\r\nTransportation: $" + transportationVal * 12
@@ -533,10 +550,23 @@ namespace BudgetPlanner
 
         private void residentRB_Checked(object sender, RoutedEventArgs e)
         {
+            incomeTax.IsReadOnly = true;
             calculateIncome();
         }
 
         private void nonResidentRB_Checked(object sender, RoutedEventArgs e)
+        {
+            incomeTax.IsReadOnly = true;
+            calculateIncome();
+        }
+
+        private void customRB_Checked(object sender, RoutedEventArgs e)
+        {
+            incomeTax.IsReadOnly = false;
+            incomeTax.Text = incomeTax.Text.Substring(0, incomeTax.Text.Length - 1);
+        }
+
+        private void incomeTax_TextChanged(object sender, TextChangedEventArgs e)
         {
             calculateIncome();
         }
